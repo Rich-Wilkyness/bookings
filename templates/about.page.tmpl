@@ -1,0 +1,23 @@
+{{template "base" .}}
+
+{{define "content"}}
+  <div class="container">
+    <div class="row">
+        <div class="col">
+            <h1>This is the about page</h1>
+
+            <!-- this is template syntax. We are looking for something that has an index. the "." means looking for everything passed to the type of StringMap -->
+            <p>This came from the template: {{index .StringMap "test"}}</p>
+
+            <p>
+              <!-- this is a conditional statement. If the remote_ip is not empty, then print the remote_ip. If it is empty, then print nothing -->
+              {{if ne (index .StringMap "remote_ip") ""}} 
+                Your IP address is: {{index .StringMap "remote_ip"}}
+              {{else}}
+                I don't know your IP address yet. Visit <a href="/">Home page</a> so i can set it.
+              {{end}}
+            </p>
+        </div>
+    </div>
+  </div>
+{{end}}
