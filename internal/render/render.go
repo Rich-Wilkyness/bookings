@@ -7,8 +7,9 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/Rich-Wilkyness/bookings/pkg/config"
-	"github.com/Rich-Wilkyness/bookings/pkg/models"
+	"github.com/Rich-Wilkyness/bookings/internal/config"
+	"github.com/Rich-Wilkyness/bookings/internal/models"
+	"github.com/justinas/nosurf"
 )
 
 // ---------------------------------------------------- Advanced Render -------------------------------------------
@@ -24,12 +25,13 @@ func NewTemplates(a *config.AppConfig) {
 }
 
 // this function will allow us to get data we want on every single page (things like a session)
-func AddDefaultData(td *models.TemplateData) *models.TemplateData {
+func AddDefaultData(td *models.TemplateData, r *http.Request) *models.TemplateData {
+	td.CSRFToken = nosurf.Token(r)
 	return td
 }
 
 // td is new - it is any data we are going to send to our template - see TemplateData
-func RenderTemplateAdvanced(w http.ResponseWriter, tmpl string, td *models.TemplateData) {
+func RenderTemplateAdvanced(w http.ResponseWriter, r *http.Request, tmpl string, td *models.TemplateData) {
 	// create template cache - instead to improve our caching - where we do not create a new cache everytime
 	// we are going make our cache on main and call the rendering from that cache here
 	// we made a "global" cache in our config package
@@ -58,7 +60,7 @@ func RenderTemplateAdvanced(w http.ResponseWriter, tmpl string, td *models.Templ
 
 	buf := new(bytes.Buffer) // this is for finer error handling
 
-	td = AddDefaultData(td)
+	td = AddDefaultData(td, r)
 
 	err := t.Execute(buf, td) // this tells us that the error comes from the value stored in the map (helps us isolate where the problem is)
 	if err != nil {

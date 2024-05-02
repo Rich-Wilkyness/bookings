@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Rich-Wilkyness/bookings/pkg/config"
-	"github.com/Rich-Wilkyness/bookings/pkg/handlers"
-	"github.com/Rich-Wilkyness/bookings/pkg/render"
+	"github.com/Rich-Wilkyness/bookings/internal/config"
+	"github.com/Rich-Wilkyness/bookings/internal/handlers"
+	"github.com/Rich-Wilkyness/bookings/internal/render"
 
 	"github.com/alexedwards/scs/v2"
 )

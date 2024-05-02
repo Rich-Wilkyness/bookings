@@ -1,0 +1,88 @@
+{{template "base" .}}
+
+{{define "content"}}
+<div class="container">
+
+    <div class="row">
+        <div class="col">
+            <img src="/static/images/generals-quarters.png" class="img-fluid img-thumbnail mx-auto d-block room-image" alt="room image">
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <h1 class="text-center mt-4">General's Quaters</h1>
+            <p>
+              Your refuge away from all troubles. Your refuge away from all troubles. Your refuge away from all troubles. Your refuge away from all troubles. Your refuge away from all troubles. Your refuge away from all troubles. Your refuge away from all troubles. Your refuge away from all troubles.
+            </p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col text-center">
+          <a id="check-availability-button" href="#!" class="btn btn-success">Check Availability</a>
+        </div>
+    </div>
+    
+</div>
+{{end}}
+
+{{define "js"}}
+ <script>
+    document.getElementById('check-availability-button').addEventListener('click', () => {
+          let html = `
+            <form id="check-availability-form" action="" method="post" class="needs-validation" novalidate>
+              <div class="form-row">
+                <div class="col">
+                  <div class="row" id="reservation-dates-modal">
+                    <div class="col">
+                      <input disabled id="start" type="text" name="start" class="form-control" required placeholder="Arival">
+                    </div>
+                    <div class="col">
+                      <input disabled id="end" type="text" name="end" class="form-control" required placeholder="Departure">
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <hr>
+            </form>
+          `
+          // attention comes from our base.layout js. It is what we are using to display the modal form (html above), and to handle the form submission
+          // the attention function takes a custom object with a msg, title, and callback. The callback is called when the form is submitted
+          attention.custom({
+            msg: html,
+            title: "Choose your dates",
+            willOpen: () => {
+                const elem = document.getElementById('reservation-dates-modal');
+                const rangepicker = new DateRangePicker(elem, {
+                  format: 'yyyy-mm-dd',
+                  showOnFocus: true,
+                  position: 'above',
+                });
+              },
+            didOpen: () => {
+              document.getElementById("start").disabled = false;
+              document.getElementById("end").disabled = false;
+            },
+            callback: function(result) { 
+              console.log("called");
+
+              let form = document.getElementById('check-availability-form');
+              let formData = new FormData(form); // this is a built in js object that takes a form and creates a key value pair object from the form data
+              formData.append("csrf_token", "{{.CSRFToken}}"); // we are adding the csrf token to the form data
+
+              // fetch is a get if it only takes one argument, but we are passing two arguments so it is a post
+              fetch('/search-availability-json', {
+                method: 'POST',
+                body: formData,
+              })
+                .then(response => response.json())
+                .then(data => {
+                  console.log(data);
+                })
+            }
+          });
+          
+        });
+ </script>
+{{end}}

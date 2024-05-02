@@ -1,0 +1,1 @@
+the pkg directory is for stand alonge code that someone can copy and paste into their own application
