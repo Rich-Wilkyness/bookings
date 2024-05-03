@@ -26,6 +26,10 @@ func NewTemplates(a *config.AppConfig) {
 
 // this function will allow us to get data we want on every single page (things like a session)
 func AddDefaultData(td *models.TemplateData, r *http.Request) *models.TemplateData {
+	td.Flash = app.Session.PopString(r.Context(), "flash") // PopString will add something to our session until a new page is hit and then it will be taken out of our session automatically
+	td.Error = app.Session.PopString(r.Context(), "error")
+	td.Warning = app.Session.PopString(r.Context(), "warning")
+
 	td.CSRFToken = nosurf.Token(r)
 	return td
 }

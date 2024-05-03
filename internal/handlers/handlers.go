@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/Rich-Wilkyness/bookings/internal/config"
+	"github.com/Rich-Wilkyness/bookings/internal/forms"
 	"github.com/Rich-Wilkyness/bookings/internal/models"
 	"github.com/Rich-Wilkyness/bookings/internal/render"
 )
@@ -66,7 +67,49 @@ func (m *Repository) About(w http.ResponseWriter, r *http.Request) {
 }
 
 func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
-	render.RenderTemplateAdvanced(w, r, "make-reservation.page.tmpl", &models.TemplateData{})
+	var emptyReservation models.Reservation // this is an empty reservation, by creating this with the data, we can populate our form with information that they previously input
+	data := make(map[string]interface{})
+	data["reservation"] = emptyReservation
+	render.RenderTemplateAdvanced(w, r, "make-reservation.page.tmpl", &models.TemplateData{
+		Form: forms.New(nil), // creates a new form without anything in it when the make-reservation page is loaded.
+		Data: data,
+	})
+}
+
+func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	reservation := models.Reservation{
+		FirstName: r.Form.Get("first_name"),
+		LastName:  r.Form.Get("last_name"),
+		Email:     r.Form.Get("email"),
+		Phone:     r.Form.Get("phone"),
+	}
+	form := forms.New(r.PostForm)
+
+	// form.Has("first_name", r) // our Has function will add any errors to our struct for a specific field
+	form.Required("first_name", "last_name", "email", "phone")
+	form.MinLength("first_name", 3, r)
+	form.IsEmail("email")
+
+	// this is so we can repopulate the form on errors, so they do not have to redo the form
+	if !form.Valid() {
+		data := make(map[string]interface{})
+		data["reservation"] = reservation
+
+		render.RenderTemplateAdvanced(w, r, "make-reservation.page.tmpl", &models.TemplateData{
+			Form: form,
+			Data: data,
+		})
+		return
+	}
+
+	m.App.Session.Put(r.Context(), "reservation", reservation)
+	// we want to redirect so our user does not submit twice (this is crucial for financial posts)
+	http.Redirect(w, r, "/reservation-summary", http.StatusSeeOther) // we can use other status' for redirect, but this one works well enough (303)
 }
 
 func (m *Repository) Generals(w http.ResponseWriter, r *http.Request) {
@@ -109,4 +152,23 @@ func (m *Repository) PostAvailabilityJSON(w http.ResponseWriter, r *http.Request
 
 func (m *Repository) Contact(w http.ResponseWriter, r *http.Request) {
 	render.RenderTemplateAdvanced(w, r, "contact.page.tmpl", &models.TemplateData{})
+}
+
+func (m *Repository) ReservationSummary(w http.ResponseWriter, r *http.Request) {
+	reservation, ok := m.App.Session.Get(r.Context(), "reservation").(models.Reservation) // the .(models.Reservation) comes from us Registering the type on our main. This is asserting what type we are expecting to get from our Session
+	if !ok {
+		// what if someone tries to access this page by typing in the url? We don't want this, so we are going to redirect them to another page
+		log.Println("cannot get item from session")
+		m.App.Session.Put(r.Context(), "error", "Cannot get reservation from session")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+	}
+
+	// we need to remove our reservation from our session so it does not persist. we are currently done with it at this point.
+	m.App.Session.Remove(r.Context(), "reservation")
+	data := make(map[string]interface{})
+	data["reservation"] = reservation
+
+	render.RenderTemplateAdvanced(w, r, "reservation-summary.page.tmpl", &models.TemplateData{
+		Data: data,
+	})
 }

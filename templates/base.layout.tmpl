@@ -127,6 +127,25 @@
             text: msg,
           })
         }
+
+        function notifyModal(title, text, icon, confirmationButtonText) {
+          Swal.fire({
+            title: title,
+            html: text,
+            icon: icon,
+            confirmButtonText: confirmationButtonText
+          })
+        }
+
+        {{with .Error}} // this is an if statement. if there is a value in Error, then do the following
+        notify("{{.}}", "error")
+        {{end}}
+        {{with .Flash}} 
+        notify("{{.}}", "success")
+        {{end}}
+        {{with .Warning}} 
+        notify("{{.}}", "warning")
+        {{end}}
   
         function Prompt() {
           let toast = function(c) {

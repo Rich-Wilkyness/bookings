@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/gob"
 	"fmt"
 	"log"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/Rich-Wilkyness/bookings/internal/config"
 	"github.com/Rich-Wilkyness/bookings/internal/handlers"
+	"github.com/Rich-Wilkyness/bookings/internal/models"
 	"github.com/Rich-Wilkyness/bookings/internal/render"
 
 	"github.com/alexedwards/scs/v2"
@@ -28,6 +30,8 @@ var app config.AppConfig // We want our global template cache here. not sure why
 var session *scs.SessionManager
 
 func main() {
+	// what am i going to put into the session?
+	gob.Register(models.Reservation{}) // this allows us to store our type struct Reservation in a session. the session library by default can do strings and ints, but not specific objects or types unless we do this (where we are registering the type to be stored)
 
 	// change this to true when in production
 	app.InProduction = false

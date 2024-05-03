@@ -3,33 +3,52 @@
 {{define "content"}}
 <div class="container">
     <div class="row">
+        <!-- this div helps center the col-md-6. there are 12 columns, we designate size of 3 columns here and then size of 6, which leaves 3 which we do not need to declare. this way our form is in the middle 6 -->
+        <div class="col-md-3"></div> 
+
         <div class="col-md-6">
 
             <h1 class="text-center mt-4">Make Reservation</h1>
 
+            {{$res := index .Data "reservation"}} <!-- this is the data we passed from the controller. This allows us to populate our form with values they previously input before an error -->
+            <!-- the naming comes from the model we created for the form on models/models -->
+            <!-- he explains this well in section 8.68 at 5 mins -->
             <form action="" method="post" class="needs-validation" novalidate>
 
                 <div class="form-group mt-5">
                     <label for="first_name">First name:</label>
-                    <input required type="text" name="first_name" id="first_name" class="form-control">
+                    {{with .Form.Errors.Get "first_name"}}
+                    <!-- the "." just displays what we passed from the with above -->
+                        <div class="text-danger">{{.}}</div> 
+                    {{end}}
+                    <!-- the with is like an if statement. if there is an error, then "is-invalid" is added to the class, making the field light up red -->
+                    <input required value="{{$res.FirstName}}" type="text" name="first_name" id="first_name" class="form-control {{with .Form.Errors.Get "first_name" }} is-invalid {{end}}">
                 </div>
                 <div class="form-group">
                     <label for="last_name">Last name:</label>
-                    <input required type="text" name="last_name" id="last_name" class="form-control">
+                    {{with .Form.Errors.Get "last_name"}}
+                        <div class="text-danger">{{.}}</div> 
+                    {{end}}
+                    <input required value="{{$res.LastName}}" type="text" name="last_name" id="last_name" class="form-control {{with .Form.Errors.Get "last_name" }} is-invalid {{end}}">
                 </div>
                 <div class="form-group">
                     <label for="email">Email:</label>
-                    <input required type="email" name="email" id="email" class="form-control">
+                    {{with .Form.Errors.Get "email"}}
+                        <div class="text-danger">{{.}}</div> 
+                    {{end}}
+                    <input required value="{{$res.Email}}" type="email" name="email" id="email" class="form-control {{with .Form.Errors.Get "email" }} is-invalid {{end}}">
                 </div>
                 <div class="form-group">
                     <label for="phone">Phone Number:</label>
-                    <input required type="text" name="phone" id="phone" class="form-control">
+                    {{with .Form.Errors.Get "phone"}}
+                        <div class="text-danger">{{.}}</div> 
+                    {{end}}
+                    <input required value="{{$res.Phone}}" type="text" name="phone" id="phone" class="form-control {{with .Form.Errors.Get "phone" }} is-invalid {{end}}">
                 </div>
-
-                <button type="submit" class="btn btn-primary" value="Make Reservation"></button>
+                <hr>
+                <button type="submit" class="btn btn-primary" value="Make Reservation">Make Reservation</button>
 
             </form>
-
         </div>
     </div>
 </div>
