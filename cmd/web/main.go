@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql/driver"
 	"encoding/gob"
 	"fmt"
 	"log"
@@ -8,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Rich-Wilkyness/bookings/internal/config"
+	"github.com/Rich-Wilkyness/bookings/internal/driver"
 	"github.com/Rich-Wilkyness/bookings/internal/handlers"
 	"github.com/Rich-Wilkyness/bookings/internal/models"
 	"github.com/Rich-Wilkyness/bookings/internal/render"
@@ -44,6 +46,13 @@ func main() {
 	session.Cookie.Secure = app.InProduction       // for production we want this to be true, when true this makes the site https. and the cookies are encrypted
 
 	app.Session = session
+
+	// connect to the database
+	log.Println("Connecting to database...")
+	db, err := driver.ConnectSQL("host=localhost port=5432 dbname=bookings user=postgres password=lebrum1203")
+	if err != nil {
+		log.Fatal("Cannot connect to database! Dying...")
+	}
 
 	tc, err := render.CreateTemplateCacheAdvanced()
 	if err != nil {
