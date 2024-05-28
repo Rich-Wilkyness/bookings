@@ -2,6 +2,7 @@ package render
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -16,11 +17,19 @@ import (
 // Advantage - no longer have to keep track of how many files are in the template folder
 // Advantage - how many of those files are using page.tmpl vs layout.tmpl
 
+var functions = template.FuncMap{}
+
 // creates a global variable to access our config / cache
 var app *config.AppConfig
+var pathToTemplates = "./templates"
 
 // sets config for the render package to have access
 func NewTemplates(a *config.AppConfig) {
+	app = a
+}
+
+// NewRenderer sets the config for the template package
+func NewRenderer(a *config.AppConfig) {
 	app = a
 }
 
@@ -35,15 +44,10 @@ func AddDefaultData(td *models.TemplateData, r *http.Request) *models.TemplateDa
 }
 
 // td is new - it is any data we are going to send to our template - see TemplateData
-func RenderTemplateAdvanced(w http.ResponseWriter, r *http.Request, tmpl string, td *models.TemplateData) {
+func Template(w http.ResponseWriter, r *http.Request, tmpl string, td *models.TemplateData) error {
 	// create template cache - instead to improve our caching - where we do not create a new cache everytime
 	// we are going make our cache on main and call the rendering from that cache here
 	// we made a "global" cache in our config package
-
-	// tc, err := CreateTemplateCacheAdvanced() 	// commenting out the caching here
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
 
 	var tc map[string]*template.Template
 
@@ -53,7 +57,7 @@ func RenderTemplateAdvanced(w http.ResponseWriter, r *http.Request, tmpl string,
 		// create new func NewTemplates()
 		tc = app.TemplateCache
 	} else {
-		tc, _ = CreateTemplateCacheAdvanced()
+		tc, _ = CreateTemplateCache()
 	}
 
 	// get requested template from cache
@@ -74,12 +78,13 @@ func RenderTemplateAdvanced(w http.ResponseWriter, r *http.Request, tmpl string,
 	// render the template
 	_, err = buf.WriteTo(w)
 	if err != nil {
-		log.Println(err)
+		fmt.Println("Error writing template to browser", err)
+		return err
 	}
-
+	return nil
 }
 
-func CreateTemplateCacheAdvanced() (map[string]*template.Template, error) {
+func CreateTemplateCache() (map[string]*template.Template, error) {
 	// we could create a map this way, but we'll do it another way
 	// myCache := make(map[string]*template.Template)
 
@@ -87,7 +92,8 @@ func CreateTemplateCacheAdvanced() (map[string]*template.Template, error) {
 	// need to cache everything, when rendering the first thing you need to parse is the template(s), then the layout(s)
 
 	// get all of the files named *.page.tmpl from ./templates
-	pages, err := filepath.Glob("./templates/*.page.tmpl") // Glob is used to return a pattern of files
+	// Glob is used to return a pattern of files that match the pattern
+	pages, err := filepath.Glob(fmt.Sprintf("%s/*.page.tmpl", pathToTemplates))
 	if err != nil {
 		return myCache, err
 	}
@@ -105,12 +111,13 @@ func CreateTemplateCacheAdvanced() (map[string]*template.Template, error) {
 			return myCache, err
 		}
 
-		matches, err := filepath.Glob("./templates/*.layout.tmpl")
+		matches, err := filepath.Glob(fmt.Sprintf("%s/*.layout.tmpl", pathToTemplates))
 		if err != nil {
 			return myCache, err
 		}
 		if len(matches) > 0 {
-			ts, err = ts.ParseGlob("./templates/*.layout.tmpl") // remember parse means to associate the content. So we are associating the layout(s) to our template set(s) (ts) in a for loop
+			ts, err = ts.ParseGlob(fmt.Sprintf("%s/*.layout.tmpl", pathToTemplates))
+			// remember parse means to associate the content. So we are associating the layout(s) to our template set(s) (ts) in a for loop
 			// so each page is associated with all of the layout(s) if any
 			if err != nil {
 				return myCache, err
